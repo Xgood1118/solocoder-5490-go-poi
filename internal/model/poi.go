@@ -64,6 +64,7 @@ type POI struct {
 	UpdatedAt     time.Time       `json:"updated_at"`
 	Source        POISource       `json:"source"`
 	Status        POIStatus       `json:"status"`
+	Version       int64           `json:"version"`
 	PinyinName    string          `json:"-"`
 	Geohash6      string          `json:"-"`
 	Geohash5      string          `json:"-"`

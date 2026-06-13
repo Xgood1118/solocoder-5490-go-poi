@@ -189,106 +189,114 @@ func CreatePOI(poi *model.POI, operator, ip, ua string) (*model.POI, error) {
 	return poi, nil
 }
 
-func UpdatePOI(id string, updates map[string]interface{}, operator, ip, ua string) (*model.POI, bool) {
+func UpdatePOI(id string, updates map[string]interface{}, operator, ip, ua string) (*model.POI, bool, string) {
 	poi, ok := store.GetStore().GetPOIByID(id)
 	if !ok {
-		return nil, false
+		return nil, false, "POI not found"
+	}
+
+	expectedVersion := int64(-1)
+	if v, ok := updates["expected_version"].(float64); ok {
+		expectedVersion = int64(v)
+	} else if v, ok := updates["version"].(float64); ok {
+		expectedVersion = int64(v)
 	}
 
 	var changes []audit.FieldChange
 	oldPOI := *poi
+	updatedPOI := *poi
 
 	if name, ok := updates["name"].(map[string]interface{}); ok {
-		oldName := poi.Name
+		oldName := updatedPOI.Name
 		if zh, ok := name["zh_cn"].(string); ok {
-			poi.Name.ZhCN = zh
+			updatedPOI.Name.ZhCN = zh
 		}
 		if en, ok := name["en_us"].(string); ok {
-			poi.Name.EnUS = en
+			updatedPOI.Name.EnUS = en
 		}
 		if ja, ok := name["ja_jp"].(string); ok {
-			poi.Name.JaJP = ja
+			updatedPOI.Name.JaJP = ja
 		}
 		if ko, ok := name["ko_kr"].(string); ok {
-			poi.Name.KoKR = ko
+			updatedPOI.Name.KoKR = ko
 		}
 		changes = append(changes, audit.FieldChange{
 			Field:    "name",
 			OldValue: oldName,
-			NewValue: poi.Name,
+			NewValue: updatedPOI.Name,
 		})
 	}
 
 	if category, ok := updates["category"].(map[string]interface{}); ok {
-		oldCat := poi.Category
+		oldCat := updatedPOI.Category
 		if l1, ok := category["l1"].(string); ok {
-			poi.Category.L1 = l1
+			updatedPOI.Category.L1 = l1
 		}
 		if l2, ok := category["l2"].(string); ok {
-			poi.Category.L2 = l2
+			updatedPOI.Category.L2 = l2
 		}
 		if l3, ok := category["l3"].(string); ok {
-			poi.Category.L3 = l3
+			updatedPOI.Category.L3 = l3
 		}
 		changes = append(changes, audit.FieldChange{
 			Field:    "category",
 			OldValue: oldCat,
-			NewValue: poi.Category,
+			NewValue: updatedPOI.Category,
 		})
 	}
 
 	if address, ok := updates["address"].(string); ok {
 		changes = append(changes, audit.FieldChange{
 			Field:    "address",
-			OldValue: poi.Address,
+			OldValue: updatedPOI.Address,
 			NewValue: address,
 		})
-		poi.Address = address
+		updatedPOI.Address = address
 	}
 
 	if city, ok := updates["city"].(string); ok {
 		changes = append(changes, audit.FieldChange{
 			Field:    "city",
-			OldValue: poi.City,
+			OldValue: updatedPOI.City,
 			NewValue: city,
 		})
-		poi.City = city
+		updatedPOI.City = city
 	}
 
 	if district, ok := updates["district"].(string); ok {
 		changes = append(changes, audit.FieldChange{
 			Field:    "district",
-			OldValue: poi.District,
+			OldValue: updatedPOI.District,
 			NewValue: district,
 		})
-		poi.District = district
+		updatedPOI.District = district
 	}
 
 	if lat, ok := updates["lat"].(float64); ok {
 		changes = append(changes, audit.FieldChange{
 			Field:    "lat",
-			OldValue: poi.Lat,
+			OldValue: updatedPOI.Lat,
 			NewValue: lat,
 		})
-		poi.Lat = lat
+		updatedPOI.Lat = lat
 	}
 
 	if lng, ok := updates["lng"].(float64); ok {
 		changes = append(changes, audit.FieldChange{
 			Field:    "lng",
-			OldValue: poi.Lng,
+			OldValue: updatedPOI.Lng,
 			NewValue: lng,
 		})
-		poi.Lng = lng
+		updatedPOI.Lng = lng
 	}
 
 	if phone, ok := updates["phone"].(string); ok {
 		changes = append(changes, audit.FieldChange{
 			Field:    "phone",
-			OldValue: poi.Phone,
+			OldValue: updatedPOI.Phone,
 			NewValue: phone,
 		})
-		poi.Phone = phone
+		updatedPOI.Phone = phone
 	}
 
 	if bh, ok := updates["business_hours"].(model.BusinessHours); ok {
@@ -297,42 +305,46 @@ func UpdatePOI(id string, updates map[string]interface{}, operator, ip, ua strin
 			OldValue: oldPOI.BusinessHours,
 			NewValue: bh,
 		})
-		poi.BusinessHours = bh
+		updatedPOI.BusinessHours = bh
 	}
 
 	if rating, ok := updates["rating"].(float64); ok {
 		changes = append(changes, audit.FieldChange{
 			Field:    "rating",
-			OldValue: poi.Rating,
+			OldValue: updatedPOI.Rating,
 			NewValue: rating,
 		})
-		poi.Rating = rating
+		updatedPOI.Rating = rating
 	}
 
 	if tags, ok := updates["tags"].([]string); ok {
 		changes = append(changes, audit.FieldChange{
 			Field:    "tags",
-			OldValue: poi.Tags,
+			OldValue: updatedPOI.Tags,
 			NewValue: tags,
 		})
-		poi.Tags = tags
+		updatedPOI.Tags = tags
 	}
 
 	if status, ok := updates["status"].(model.POIStatus); ok {
 		changes = append(changes, audit.FieldChange{
 			Field:    "status",
-			OldValue: poi.Status,
+			OldValue: updatedPOI.Status,
 			NewValue: status,
 		})
-		poi.Status = status
+		updatedPOI.Status = status
 	}
 
-	poi.UpdatedAt = time.Now()
+	updatedPOI.UpdatedAt = time.Now()
 
-	store.GetStore().AddPOI(poi)
-	audit.GetAuditStore().LogUpdate(poi.POIId, operator, ip, ua, changes)
+	result, ok, msg := store.GetStore().UpdatePOIWithVersion(&updatedPOI, expectedVersion)
+	if !ok {
+		return result, false, msg
+	}
 
-	return poi, true
+	audit.GetAuditStore().LogUpdate(updatedPOI.POIId, operator, ip, ua, changes)
+
+	return result, true, ""
 }
 
 func DeletePOI(id, operator, ip, ua string) bool {

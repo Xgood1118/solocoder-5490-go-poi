@@ -12,6 +12,7 @@ import (
 	"poi-service/internal/search"
 	"poi-service/internal/stats"
 	"poi-service/internal/store"
+	"poi-service/internal/utils"
 	"strconv"
 	"time"
 
@@ -100,17 +101,46 @@ func getUserAgent(c *gin.Context) string {
 }
 
 func handleNearbySearch(c *gin.Context) {
-	lat, _ := strconv.ParseFloat(c.Query("lat"), 64)
-	lng, _ := strconv.ParseFloat(c.Query("lng"), 64)
-	radius, _ := strconv.ParseFloat(c.Query("radius"), 64)
-	category := c.Query("category")
-	limit, _ := strconv.Atoi(c.Query("limit"))
+	lat, err1 := strconv.ParseFloat(c.Query("lat"), 64)
+	lng, err2 := strconv.ParseFloat(c.Query("lng"), 64)
+	radius, err3 := strconv.ParseFloat(c.Query("radius"), 64)
+	category := utils.DecodeQueryParam(c.Query("category"))
+	limit, err4 := strconv.Atoi(c.Query("limit"))
 
-	if limit <= 0 {
+	if err1 != nil || lat < -90 || lat > 90 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    400,
+			"message": "invalid lat: must be between -90 and 90",
+		})
+		return
+	}
+	if err2 != nil || lng < -180 || lng > 180 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    400,
+			"message": "invalid lng: must be between -180 and 180",
+		})
+		return
+	}
+	if err3 != nil || radius <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    400,
+			"message": "invalid radius: must be a positive number",
+		})
+		return
+	}
+	if radius > 500000 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    400,
+			"message": "invalid radius: maximum 500000 meters (500km)",
+		})
+		return
+	}
+
+	if err4 != nil || limit <= 0 {
 		limit = 20
 	}
-	if radius <= 0 {
-		radius = 1000
+	if limit > 100 {
+		limit = 100
 	}
 
 	results := search.NearbySearch(&search.NearbyQuery{
@@ -126,25 +156,43 @@ func handleNearbySearch(c *gin.Context) {
 		"message": "success",
 		"data":    results,
 		"count":   len(results),
+		"radius":  radius,
+		"center":  gin.H{"lat": lat, "lng": lng},
 	})
 }
 
 func handleKeywordSearch(c *gin.Context) {
-	q := c.Query("q")
-	city := c.Query("city")
-	page, _ := strconv.Atoi(c.Query("page"))
-	pageSize, _ := strconv.Atoi(c.Query("page_size"))
+	q := utils.DecodeQueryParam(c.Query("q"))
+	city := utils.DecodeQueryParam(c.Query("city"))
+	category := utils.DecodeQueryParam(c.Query("category"))
+	page, err1 := strconv.Atoi(c.Query("page"))
+	pageSize, err2 := strconv.Atoi(c.Query("page_size"))
 
-	if page <= 0 {
+	if err1 != nil || page <= 0 {
 		page = 1
 	}
-	if pageSize <= 0 {
+	if page > 1000 {
+		page = 1000
+	}
+	if err2 != nil || pageSize <= 0 {
 		pageSize = 20
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+
+	if q == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    400,
+			"message": "query parameter 'q' is required",
+		})
+		return
 	}
 
 	results := search.KeywordSearch(&search.SearchQuery{
 		Q:        q,
 		City:     city,
+		Category: category,
 		Page:     page,
 		PageSize: pageSize,
 	})
@@ -219,12 +267,20 @@ func handleUpdatePOI(c *gin.Context) {
 	ip := getClientIP(c)
 	ua := getUserAgent(c)
 
-	result, ok := poi.UpdatePOI(id, updates, operator, ip, ua)
+	result, ok, msg := poi.UpdatePOI(id, updates, operator, ip, ua)
 	if !ok {
-		c.JSON(http.StatusNotFound, gin.H{
-			"code":    404,
-			"message": "POI not found",
-		})
+		if msg == "POI not found" {
+			c.JSON(http.StatusNotFound, gin.H{
+				"code":    404,
+				"message": msg,
+			})
+		} else {
+			c.JSON(http.StatusConflict, gin.H{
+				"code":    409,
+				"message": msg,
+				"data":    result,
+			})
+		}
 		return
 	}
 

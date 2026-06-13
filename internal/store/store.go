@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"poi-service/internal/geohash"
 	"poi-service/internal/model"
 	"poi-service/internal/utils"
@@ -43,7 +44,10 @@ func (s *Store) AddPOI(poi *model.POI) {
 	poi.PinyinName = utils.ToPinyin(poi.Name.ZhCN)
 
 	if existing, ok := s.poiByID[poi.POIId]; ok {
+		poi.Version = existing.Version + 1
 		s.removeFromIndexes(existing)
+	} else {
+		poi.Version = 1
 	}
 
 	s.poiByID[poi.POIId] = poi
@@ -62,6 +66,48 @@ func (s *Store) AddPOI(poi *model.POI) {
 	}
 
 	s.addToCategoryIndex(poi)
+}
+
+func (s *Store) UpdatePOIWithVersion(poi *model.POI, expectedVersion int64) (*model.POI, bool, string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	existing, ok := s.poiByID[poi.POIId]
+	if !ok {
+		return nil, false, "POI not found"
+	}
+
+	if expectedVersion >= 0 && existing.Version != expectedVersion {
+		return existing, false, "version conflict: expected version " + fmt.Sprintf("%d", expectedVersion) + ", current version is " + fmt.Sprintf("%d", existing.Version)
+	}
+
+	poi.Version = existing.Version + 1
+	poi.CreatedAt = existing.CreatedAt
+
+	s.removeFromIndexes(existing)
+
+	poi.Geohash6 = geohash.Encode(poi.Lat, poi.Lng, 6)
+	poi.Geohash5 = geohash.Encode(poi.Lat, poi.Lng, 5)
+	poi.PinyinName = utils.ToPinyin(poi.Name.ZhCN)
+
+	s.poiByID[poi.POIId] = poi
+
+	for _, prec := range geohashPrecisions {
+		hash := geohash.Encode(poi.Lat, poi.Lng, prec)
+		s.geohashBuckets[hash] = append(s.geohashBuckets[hash], poi)
+	}
+
+	if poi.City != "" {
+		s.cityIndex[poi.City] = append(s.cityIndex[poi.City], poi)
+	}
+
+	if poi.Address != "" {
+		s.addressIndex[poi.Address] = append(s.addressIndex[poi.Address], poi)
+	}
+
+	s.addToCategoryIndex(poi)
+
+	return poi, true, ""
 }
 
 func (s *Store) removeFromIndexes(poi *model.POI) {
