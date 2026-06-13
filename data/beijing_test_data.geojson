@@ -1,0 +1,121 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [116.397428, 39.90923]
+      },
+      "properties": {
+        "name_zh": "天安门广场",
+        "name_en": "Tiananmen Square",
+        "name_ja": "天安門広場",
+        "name_ko": "천안문 광장",
+        "category_l1": "景点",
+        "category_l2": "历史古迹",
+        "category_l3": "广场",
+        "address": "东长安街",
+        "city": "北京",
+        "district": "东城区",
+        "phone": "010-65243322",
+        "rating": 4.8,
+        "tags": ["地标", "历史", "推荐"],
+        "business_hours": "周一:05:00-22:00;周二:05:00-22:00;周三:05:00-22:00;周四:05:00-22:00;周五:05:00-22:00;周六:05:00-22:00;周日:05:00-22:00",
+        "status": "active",
+        "source": "partner"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [116.403963, 39.924091]
+      },
+      "properties": {
+        "name_zh": "故宫博物院",
+        "name_en": "Forbidden City",
+        "category_l1": "景点",
+        "category_l2": "历史古迹",
+        "category_l3": "博物馆",
+        "address": "景山前街4号",
+        "city": "北京",
+        "district": "东城区",
+        "phone": "010-85007421",
+        "rating": 4.9,
+        "tags": ["世界遗产", "历史", "推荐", "必去"],
+        "business_hours": "周一:08:30-17:00;周二:08:30-17:00;周三:08:30-17:00;周四:08:30-17:00;周五:08:30-17:00;周六:08:30-17:00;周日:08:30-17:00",
+        "status": "active",
+        "source": "partner"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [116.355426, 39.938884]
+      },
+      "properties": {
+        "name_zh": "北京动物园",
+        "name_en": "Beijing Zoo",
+        "category_l1": "景点",
+        "category_l2": "公园",
+        "category_l3": "动物园",
+        "address": "西直门外大街137号",
+        "city": "北京",
+        "district": "西城区",
+        "phone": "010-68390274",
+        "rating": 4.3,
+        "tags": ["动物", "亲子", "熊猫"],
+        "business_hours": "周一:07:30-18:00;周二:07:30-18:00;周三:07:30-18:00;周四:07:30-18:00;周五:07:30-18:00;周六:07:30-18:00;周日:07:30-18:00",
+        "status": "active",
+        "source": "crawler"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [116.40674, 39.998552]
+      },
+      "properties": {
+        "name_zh": "鸟巢体育场",
+        "name_en": "Bird's Nest Stadium",
+        "category_l1": "景点",
+        "category_l2": "现代建筑",
+        "category_l3": "体育场馆",
+        "address": "国家体育场南路1号",
+        "city": "北京",
+        "district": "朝阳区",
+        "phone": "010-84375588",
+        "rating": 4.5,
+        "tags": ["地标", "奥运", "建筑"],
+        "status": "active",
+        "source": "manual"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [116.393002, 39.986246]
+      },
+      "properties": {
+        "name_zh": "全聚德烤鸭店(前门店)",
+        "name_en": "Quanjude Peking Duck",
+        "category_l1": "餐饮",
+        "category_l2": "中餐",
+        "category_l3": "北京菜",
+        "address": "前门大街30号",
+        "city": "北京",
+        "district": "东城区",
+        "phone": "010-65112418",
+        "rating": 4.2,
+        "tags": ["烤鸭", "老字号", "推荐"],
+        "business_hours": "周一:11:00-21:30;周二:11:00-21:30;周三:11:00-21:30;周四:11:00-21:30;周五:11:00-22:00;周六:11:00-22:00;周日:11:00-21:30",
+        "status": "active",
+        "source": "user_submit"
+      }
+    }
+  ]
+}
